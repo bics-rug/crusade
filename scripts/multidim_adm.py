@@ -2,7 +2,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from scipy.signal import chirp
 
-from crusafe.conversion_methods import standard_ADM
+from crusade.conversion_methods import standard_ADM
 
 sr = 44100
 duration = 0.1

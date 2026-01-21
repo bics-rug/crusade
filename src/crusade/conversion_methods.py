@@ -416,6 +416,58 @@ class resonate_and_fire_bank:
 
             return event_time, event_address
 
+    def dynamic_range_test(self):
+        max_input = []
+        min_input = []
+        dynamic_range = []
+
+        # search for all the central freqs of the array
+        for freq in self.frequencies:
+            # search for max input
+            test_time = 2 / freq
+            ampl_max = []
+            ampl_max.append(10)
+            time = jnp.arange(0, test_time, 1 / self.sampling_rate)
+            for search_step in jnp.arange(1, 20, 1):
+                event_time, event_address = self.__call__(
+                    audio=jnp.sin(jnp.pi * time * freq) * ampl_max[-1]
+                )
+                saturation = 0
+                for jj in jnp.arange(0, self.num_neurons, 1):
+                    count_x = jnp.count_nonzero(event_address == jj)
+                    if count_x >= 1:  # ((test_time/freq)*0.99):
+                        saturation = saturation + 1
+                if saturation == 0:
+                    ampl_max.append(ampl_max[-1] + ampl_max[0] / 2**search_step)
+                elif saturation >= 1:
+                    ampl_max.append(ampl_max[-1] - ampl_max[0] / 2**search_step)
+
+            # search for min input
+            ampl_min = []
+            ampl_min.append(10)
+            test_time = 50 / freq
+            time = jnp.arange(0, test_time, 1 / self.sampling_rate)
+            for search_step in jnp.arange(1, 20, 1):
+                event_time, event_address = self.__call__(
+                    audio=jnp.sin(jnp.pi * time * freq) * ampl_min[-1]
+                )
+
+                activation = 0
+                for jj in jnp.arange(0, self.num_neurons, 1):
+                    count_x = jnp.count_nonzero(event_address == jj)
+                    if count_x > 0:
+                        activation = activation + 1
+                if activation == 0:
+                    ampl_min.append(ampl_min[-1] + ampl_min[0] / 2**search_step)
+                elif activation >= 1:
+                    ampl_min.append(ampl_min[-1] - ampl_min[0] / 2**search_step)
+
+            max_input.append(ampl_max[-1])
+            min_input.append(ampl_min[-1])
+            dynamic_range.append(jnp.log10(ampl_max[-1] / ampl_min[-1]) * 2)
+
+        return dynamic_range, max_input, min_input
+
 
 class standard_ADM:
     """Standard Adaptive Delta Modulator (ADM)
@@ -659,6 +711,67 @@ class filterbank_ADM:
         event_magnitude = out_spikes[event_v, address_v]
 
         return event_time, event_address, event_magnitude
+
+    def dynamic_range_test(self):
+        max_input = []
+        min_input = []
+        dynamic_range = []
+
+        test_time = 0.1
+        time = jnp.arange(0, test_time, 1 / self.sampling_rate)
+        for freq in self.frequencies:
+            ampl_max = []
+            ampl_max.append(10)
+            for search_step in jnp.arange(1, 20, 1):
+                _, event_address, _ = self.__call__(
+                    audio=jnp.sin(jnp.pi * time * freq)
+                    * (
+                        jnp.abs(
+                            2 * (time / test_time - jnp.floor(time / test_time + 0.5))
+                        )
+                    )
+                    * ampl_max[-1]
+                )
+
+                saturation = 0
+                for jj in jnp.arange(0, self.num_neurons, 1):
+                    count_x = jnp.count_nonzero(event_address == jj)
+                    # print(count_x)
+                    if count_x >= ((test_time / self.t_ref) * 0.95):
+                        saturation = saturation + 1
+                if saturation == 0:
+                    ampl_max.append(ampl_max[-1] + ampl_max[0] / 2**search_step)
+                elif saturation >= 1:
+                    ampl_max.append(ampl_max[-1] - ampl_max[0] / 2**search_step)
+
+            ampl_min = []
+            ampl_min.append(10)
+            for search_step in jnp.arange(1, 20, 1):
+                _, event_address, _ = self.__call__(
+                    audio=jnp.sin(jnp.pi * time * freq)
+                    * (
+                        jnp.abs(
+                            2 * (time / test_time - jnp.floor(time / test_time + 0.5))
+                        )
+                    )
+                    * ampl_min[-1]
+                )
+
+                activation = 0
+                for jj in jnp.arange(0, self.num_neurons, 1):
+                    count_x = jnp.count_nonzero(event_address == jj)
+                    if count_x > 0:
+                        activation = activation + 1
+                if activation == 0:
+                    ampl_min.append(ampl_min[-1] + ampl_min[0] / 2**search_step)
+                elif activation >= 1:
+                    ampl_min.append(ampl_min[-1] - ampl_min[0] / 2**search_step)
+
+            dynamic_range.append(2 * jnp.log10(ampl_max[-1] / ampl_min[-1]))
+            max_input.append(ampl_max[-1])
+            min_input.append(ampl_min[-1])
+
+        return dynamic_range, max_input, min_input
 
 
 class filterbank_sync_phase:

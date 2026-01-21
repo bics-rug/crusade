@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import pytest
 
-from crusafe.utils import frequency_bins_generator
+from crusade.utils import frequency_bins_generator
 
 
 @pytest.mark.parametrize("n", [1, 2, 8, 24])

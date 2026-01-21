@@ -5,9 +5,12 @@ resolution-markers = [
     "(python_full_version >= '3.13' and sys_platform == 'linux') or (python_full_version >= '3.13' and sys_platform == 'win32')",
     "(python_full_version == '3.12.*' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform == 'win32')",
     "(python_full_version < '3.12' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform == 'win32')",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'darwin'",
 ]
 
 [[package]]
@@ -570,14 +573,15 @@ wheels = [
 ]
 
 [[package]]
-name = "crusafe"
+name = "crusade"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "datasets" },
     { name = "ipykernel" },
     { name = "ipywidgets" },
-    { name = "jax", extra = ["cuda13"] },
+    { name = "jax" },
+    { name = "jax", extra = ["cuda13"], marker = "sys_platform != 'darwin'" },
     { name = "jaxtyping" },
     { name = "librosa" },
     { name = "matplotlib" },
@@ -603,7 +607,8 @@ requires-dist = [
     { name = "datasets", specifier = "<4.0.0" },
     { name = "ipykernel", specifier = ">=6.31.0" },
     { name = "ipywidgets", specifier = ">=8.1.8" },
-    { name = "jax", extras = ["cuda13"], specifier = ">=0.8.0" },
+    { name = "jax", marker = "sys_platform == 'darwin'", specifier = ">=0.8.0" },
+    { name = "jax", extras = ["cuda13"], marker = "sys_platform != 'darwin'", specifier = ">=0.8.0" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "librosa", specifier = ">=0.11.0" },
     { name = "matplotlib", specifier = ">=3.9.4" },
@@ -1131,8 +1136,8 @@ wheels = [
 
 [package.optional-dependencies]
 cuda13 = [
-    { name = "jax-cuda13-plugin", extra = ["with-cuda"] },
-    { name = "jaxlib" },
+    { name = "jax-cuda13-plugin", extra = ["with-cuda"], marker = "sys_platform != 'darwin'" },
+    { name = "jaxlib", marker = "sys_platform != 'darwin'" },
 ]
 
 [[package]]
@@ -1149,7 +1154,7 @@ name = "jax-cuda13-plugin"
 version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jax-cuda13-pjrt" },
+    { name = "jax-cuda13-pjrt", marker = "sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/2a/7d405f60873bd0b6a0c1b7c16397f8514eda992df240ecb5b6b2fd2d0b6f/jax_cuda13_plugin-0.8.1-cp311-cp311-manylinux_2_27_aarch64.whl", hash = "sha256:a4c5a4a69346be6520c729675d5d80e85d610399f4840d74bdfae9c6ebedc8bc", size = 5586658, upload-time = "2025-11-18T19:48:24.3Z" },
@@ -1180,7 +1185,7 @@ with-cuda = [
     { name = "nvidia-nccl-cu13", marker = "sys_platform == 'linux'" },
     { name = "nvidia-nvjitlink", marker = "sys_platform == 'linux'" },
     { name = "nvidia-nvshmem-cu13", marker = "sys_platform == 'linux'" },
-    { name = "nvidia-nvvm" },
+    { name = "nvidia-nvvm", marker = "sys_platform != 'darwin'" },
 ]
 
 [[package]]
@@ -3483,9 +3488,12 @@ name = "torch"
 version = "2.9.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'darwin'",
 ]
 dependencies = [
     { name = "filelock", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },

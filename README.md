@@ -1,4 +1,5 @@
-# CRUSAfe
+# CRUSADE
+Conversion of Raw-audio Using Spikes Analog Digital Encoders
 
 This repository contains implementations of different analogue-to-spike converters for raw audio signal.
 
