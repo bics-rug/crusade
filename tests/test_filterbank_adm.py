@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from scipy.signal import chirp
 
-from crusafe.conversion_methods import filterbank_ADM
+from crusade.conversion_methods import filterbank_ADM
 
 
 def make_sine(freq, sr, duration, amplitude=0.5):

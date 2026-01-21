@@ -1,0 +1,14 @@
+scikit-learn
+jax
+numpy
+matplotlib
+pandas
+optuna
+plotly
+optuna-dashboard
+scipy
+rockpool
+torch
+datasets
+torchcodec
+ipykernel

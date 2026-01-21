@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from crusafe import conversion_methods, utils
+from crusade import conversion_methods, utils
 
 # source .venv/bin/activate
 # module load FFmpeg/7.1.1-GCCcore-14.2.0
