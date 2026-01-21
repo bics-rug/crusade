@@ -1,0 +1,50 @@
+[project]
+name = "CRUSAFe"
+version = "0.1.0"
+description = "Conversion and Rate-coding Using Spiking Analog Frontend"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "datasets<4.0.0",
+    "ipykernel>=6.31.0",
+    "ipywidgets>=8.1.8",
+    "jax[cuda13]>=0.8.0",
+    "jaxtyping>=0.3.3",
+    "librosa>=0.11.0",
+    "matplotlib>=3.9.4",
+    "pandas>=2.3.3",
+    "scikit-learn>=1.6.1",
+    "scipy>=1.13.1",
+    "soundfile>=0.13.1",
+    "torch>=2.9.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+boilerplot = { git = "https://github.com/fehlings/boilerplot.git" }
+torch = [
+  { index = "pytorch", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[dependency-groups]
+dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-jupyter>=0.25.1",
+    "mkdocs-material>=9.7.0",
+    "pre-commit>=4.5.0",
+    "pytest>=9.0.1",
+]
+
+[tool.ruff.lint]
+ignore = ["F722"]
