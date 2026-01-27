@@ -9,7 +9,7 @@ This project contains Python implementations of various methods and neural model
 - Standalone ADM.
 - Filterbank with ADM.
 - Filterbank with Resonate and Fire neurons.
-- Filterbank with phase encoding.
+- Filterbank with phase encoding (under development).
 
 ## Installation
 Recommended version for installation is using [uv](https://docs.astral.sh/uv/)
