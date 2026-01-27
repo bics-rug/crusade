@@ -18,6 +18,7 @@ dependencies = [
     "scipy>=1.13.1",
     "soundfile>=0.13.1",
     "torch>=2.9.1",
+    "optuna>=4.7.0",
 ]
 
 [build-system]
@@ -26,12 +27,8 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 boilerplot = { git = "https://github.com/fehlings/boilerplot.git" }
-torch = [
-  { index = "pytorch", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
-]
-torchvision = [
-  { index = "pytorch", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
-]
+torch = { index = "pytorch", marker = "sys_platform == 'linux' or sys_platform == 'win32'" }
+torchvision = { index = "pytorch", marker = "sys_platform == 'linux' or sys_platform == 'win32'" }
 
 [[tool.uv.index]]
 name = "pytorch"
@@ -49,3 +46,6 @@ dev = [
 
 [tool.ruff.lint]
 ignore = ["F722"]
+
+[tool.mypy]
+disable_error_code = ["import-untyped"]
