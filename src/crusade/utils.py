@@ -1,8 +1,8 @@
 import jax
 import jax.numpy as jnp
 from datasets import load_dataset
-from scipy.signal import resample as resample
-from scipy.signal import sosfilt, sosfiltfilt, windows
+from jaxtyping import Array, Float
+from scipy.signal import resample, sosfilt, sosfiltfilt, windows
 
 
 def download_dataset(name="rfcx/frugalai", streaming=False, token=None, split="train"):
@@ -37,16 +37,19 @@ def low_pass_filter(modulated_signal, window_size=301, gain=4.65415):
 
 
 def audio_resampling_and_scaling(
-    audio: float, original_frequency: float, target_frequency: float, scaling_factor=1.0
-):
+    audio: Float[Array, "#time"],
+    original_frequency: float,
+    target_frequency: float,
+    scaling_factor=1.0,
+) -> Float[Array, "#time"]:
     """Resamples and scales the input audio signal.
     Args:
-        audio (float): Input audio signal.
+        audio (Array): Input audio signal.
         original_frequency (float): Original sampling frequency of the audio signal.
         target_frequency (float): Target sampling frequency for resampling.
         scaling_factor (float or str): Scaling factor or method ('normalize') for scaling the audio signal.
     Returns:
-        float: Resampled and scaled audio signal.
+        Array: Resampled and scaled audio signal.
     """
     if isinstance(scaling_factor, float):
         if scaling_factor != 1.0:
@@ -61,8 +64,10 @@ def audio_resampling_and_scaling(
 
     if original_frequency != target_frequency:
         number_of_points = len(audio)
-        audio = resample(
-            audio, number_of_points * (target_frequency // original_frequency)
+        audio = jnp.asarray(
+            resample(
+                audio, int(number_of_points * (target_frequency // original_frequency))
+            )
         )
 
     return audio

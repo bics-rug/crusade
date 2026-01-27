@@ -2,7 +2,7 @@ from typing import Optional
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, Float
+from jaxtyping import Array, Float, Int8
 from scipy.signal import butter
 
 from . import utils
@@ -37,7 +37,7 @@ class sigma_delta_neuron_in_the_loop:
         feedback_gain: Optional[float] = None,
         threshold: Optional[float] = None,
         sampling_rate: Optional[float] = None,
-    ) -> int:
+    ) -> tuple[Float[Array, "*time"], Int8[Array, "*time"]]:
         if feedback_gain is None:
             feedback_gain = self.feedback_gain
         if threshold is None:
@@ -102,7 +102,7 @@ class sigma_delta_spiking:
         feedback_gain: Optional[float] = None,
         threshold: Optional[float] = None,
         sampling_rate: Optional[float] = None,
-    ) -> int:
+    ) -> tuple[Float[Array, "*time"], Int8[Array, "*time"]]:
         if feedback_gain is None:
             feedback_gain = self.feedback_gain
         if threshold is None:
@@ -642,7 +642,7 @@ class filterbank_ADM:
             t_ref = self.t_ref
 
         self.t_ref = t_ref
-        self.step_ref = t_ref * sampling_rate
+        self.step_ref = int(t_ref * sampling_rate)
 
         if sampling_rate != self.sampling_rate:
             self.sampling_rate = sampling_rate

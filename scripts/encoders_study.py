@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from jaxtyping import Array, Float
 from scipy.signal import butter, lfilter, windows
 
 SAMPLING_RATE = 44100 * 100  # Default sampling rate
@@ -127,7 +128,9 @@ def async_sigma_delta(input_signal, feedback_gain=1.0, threshold=0.1):
     return modulated_signal
 
 
-def amplitude_to_frequency(audio: float, max_frequency: float = 1e3) -> float:
+def amplitude_to_frequency(
+    audio: Float[Array, "#time"], max_frequency: float = 1e3
+) -> Float[Array, "#time"]:
     # data_normalized = data_interpolated / jnp.max(jnp.abs(data_interpolated))  # Normalize the audio signal
     random_number = jax.random.uniform(jax.random.PRNGKey(0), shape=audio.shape)
     spikes_p = random_number < (audio * max_frequency / SAMPLING_RATE)
