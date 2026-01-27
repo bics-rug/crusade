@@ -799,6 +799,7 @@ class filterbank_sync_phase:
         weight_ei: float = 10.0,
         weight_ie: float = 9.0,
         weight_ii: float = 2.0,
+        weight_in: float = 0.02,
     ):
         self.sampling_rate = sampling_rate
         self.num_neurons = num_neurons
@@ -820,6 +821,10 @@ class filterbank_sync_phase:
         self.weight_ei = weight_ei
         self.weight_ie = weight_ie
         self.weight_ii = weight_ii
+        self.weight_in = weight_in
+
+        self.step_ref_exc = int(self.lif_exc_tau_ref * self.sampling_rate)
+        self.step_ref_inh = int(self.lif_inh_tau_ref * self.sampling_rate)
 
         self.frequencies, self.frequencies_bins = utils.frequency_bins_generator(
             number_of_bins=self.num_neurons,
@@ -850,12 +855,15 @@ class filterbank_sync_phase:
         audio: Float[Array, "#time"],
         sampling_rate: Optional[float] = None,
     ):
-
         if sampling_rate is None:
             sampling_rate = self.sampling_rate
 
         if sampling_rate != self.sampling_rate:
             self.sampling_rate = sampling_rate
+
+            self.step_ref_exc = int(self.lif_exc_tau_ref * self.sampling_rate)
+            self.step_ref_inh = int(self.lif_inh_tau_ref * self.sampling_rate)
+
             self.band_pass_window_array = []
             self.low_pass_window_array = []
             for i in range(self.num_neurons):
@@ -881,5 +889,82 @@ class filterbank_sync_phase:
 
         @jax.jit
         def body_fun(carry, input_val):
-            
-            return 0
+            (
+                lif_mem_exc,
+                count_threshold_exc,
+                lif_mem_inh,
+                count_threshold_inh,
+                I_exc,
+                I_inh,
+            ) = carry
+
+            spikes_exc = ((lif_mem_exc >= self.lif_exc_threshold).astype(int)) * (
+                count_threshold_exc.astype(int) >= self.step_ref_exc
+            ).astype(
+                int
+            )  # Generate spikes based on thresholds and refractory period (in steps)
+
+            count_threshold_exc = (count_threshold_exc + 1) * (
+                1 - spikes_exc
+            )  # Reset counter if spike occurred
+
+            spikes_inh = ((lif_mem_inh >= self.lif_inh_threshold).astype(int)) * (
+                count_threshold_inh.astype(int) >= self.step_ref_inh
+            ).astype(
+                int
+            )  # Generate spikes based on thresholds and refractory period (in steps)
+
+            count_threshold_inh = (count_threshold_inh + 1) * (
+                1 - spikes_inh
+            )  # Reset counter if spike occurred
+
+            I_exc = I_exc * (
+                1 - 1 / (self.lif_exc_tau_synapse * self.sampling_rate)
+            ) + (
+                input_val * self.weight_in
+                + self.weight_ee * jnp.sum(spikes_exc)
+                - self.weight_ei * jnp.sum(spikes_inh)
+            )
+
+            I_inh = I_inh * (
+                1 - 1 / (self.lif_inh_tau_synapse * self.sampling_rate)
+            ) + (
+                0
+                - self.weight_ii * jnp.sum(spikes_inh)
+                + self.weight_ie * jnp.sum(spikes_exc)
+            )
+
+            lif_mem_exc = lif_mem_exc + (
+                (-lif_mem_exc / self.lif_exc_tau_membrane + I_exc + self.lif_exc_idc)
+                / self.sampling_rate
+            )
+            lif_mem_inh = lif_mem_inh + (
+                (-lif_mem_inh / self.lif_inh_tau_membrane + I_inh + self.lif_inh_idc)
+                / self.sampling_rate
+            )
+
+            return (
+                lif_mem_exc,
+                count_threshold_exc,
+                lif_mem_inh,
+                count_threshold_inh,
+                I_exc,
+                I_inh,
+            ), (spikes_exc, spikes_inh)
+
+        initial_carry = (
+            jnp.zeros((self.num_neurons,)),
+            jnp.zeros((self.num_neurons,)),
+            jnp.zeros((self.num_neurons,)),
+            jnp.zeros((self.num_neurons,)),
+            jnp.zeros((self.num_neurons,)),
+            jnp.zeros((self.num_neurons,)),
+        )
+        _, out_spikes = jax.lax.scan(body_fun, initial_carry, audio_bands.T)
+
+        time_ax = jnp.linspace(0, len(audio) / sampling_rate, len(audio))
+        event_v, address_v = jnp.where(out_spikes != 0)
+        event_time = time_ax[event_v]
+        event_address = address_v
+
+        return event_time, event_address
