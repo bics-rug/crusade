@@ -775,7 +775,7 @@ class filterbank_ADM:
 
 
 class filterbank_sync_phase:
-    """Based on the code of Patrick Boesch"""
+    """Based on the code of Patrick Boesch and Qi Shen"""
 
     def __init__(
         self,
@@ -784,12 +784,42 @@ class filterbank_sync_phase:
         freq_min: float = 200,
         freq_max: float = 20000,
         freq_distribution: str = "linear",
+        lif_variability: float = 0.01,
+        lif_exc_idc: float = 2.0,
+        lif_exc_tau_membrane: float = 20e-3,
+        lif_exc_tau_synapse: float = 20e-3,
+        lif_exc_threshold: float = 1.0,
+        lif_exc_tau_ref: float = 5e-3,
+        lif_inh_idc: float = 0.0,
+        lif_inh_tau_membrane: float = 20e-3,
+        lif_inh_tau_synapse: float = 5e-3,
+        lif_inh_threshold: float = 1.0,
+        lif_inh_tau_ref: float = 5e-3,
+        weight_ee: float = 2.0,
+        weight_ei: float = 10.0,
+        weight_ie: float = 9.0,
+        weight_ii: float = 2.0,
     ):
         self.sampling_rate = sampling_rate
         self.num_neurons = num_neurons
         self.freq_min = freq_min
         self.freq_max = freq_max
         self.freq_distribution = freq_distribution
+        self.lif_variability = lif_variability
+        self.lif_exc_idc = lif_exc_idc
+        self.lif_exc_tau_membrane = lif_exc_tau_membrane
+        self.lif_exc_tau_synapse = lif_exc_tau_synapse
+        self.lif_exc_threshold = lif_exc_threshold
+        self.lif_exc_tau_ref = lif_exc_tau_ref
+        self.lif_inh_idc = lif_inh_idc
+        self.lif_inh_tau_membrane = lif_inh_tau_membrane
+        self.lif_inh_tau_synapse = lif_inh_tau_synapse
+        self.lif_inh_threshold = lif_inh_threshold
+        self.lif_inh_tau_ref = lif_inh_tau_ref
+        self.weight_ee = weight_ee
+        self.weight_ei = weight_ei
+        self.weight_ie = weight_ie
+        self.weight_ii = weight_ii
 
         self.frequencies, self.frequencies_bins = utils.frequency_bins_generator(
             number_of_bins=self.num_neurons,
@@ -820,7 +850,6 @@ class filterbank_sync_phase:
         audio: Float[Array, "#time"],
         sampling_rate: Optional[float] = None,
     ):
-        raise NotImplementedError  # TODO: Implement it
 
         if sampling_rate is None:
             sampling_rate = self.sampling_rate
@@ -850,4 +879,7 @@ class filterbank_sync_phase:
             low_pass_window_array=self.low_pass_window_array,
         )
 
-        return audio_bands
+        @jax.jit
+        def body_fun(carry, input_val):
+            
+            return 0
