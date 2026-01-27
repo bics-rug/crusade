@@ -775,7 +775,33 @@ class filterbank_ADM:
 
 
 class filterbank_sync_phase:
-    """Based on the code of Patrick Boesch and Qi Shen"""
+    """Based on the code of Patrick Boesch and Qi Shen
+    Filterbank with amplitude to phase encoders with oscillatory network using inhibitory and excitatory neurons.
+    Attributes:
+        sampling_rate: The sampling rate of the input audio signal.
+        num_neurons (int): The number of neurons.
+        freq_min (float): The minimum frequency of the filterbank.
+        freq_max (float): The maximum frequency of the filterbank.
+        freq_distribution (str): The distribution of frequencies for the filterbank ('linear', 'log', 'mel').
+        lif_variability (float): The variability in the leaky integrate-and-fire neuron parameters.
+        lif_exc_idc (float): The constant input current for excitatory neurons.
+        lif_exc_tau_membrane (float): The membrane time constant for excitatory neurons.
+        lif_exc_tau_synapse (float): The synaptic time constant for excitatory neurons.
+        lif_exc_threshold (float): The spike threshold for excitatory neurons.
+        lif_exc_tau_ref (float): The refractory period for excitatory neurons.
+        lif_inh_idc (float): The constant input current for inhibitory neurons.
+        lif_inh_tau_membrane (float): The membrane time constant for inhibitory neurons.
+        lif_inh_tau_synapse (float): The synaptic time constant for inhibitory neurons.
+        lif_inh_threshold (float): The spike threshold for inhibitory neurons.
+        lif_inh_tau_ref (float): The refractory period for inhibitory neurons.
+        weight_ee (float): The synaptic weight from excitatory to excitatory neurons.
+        weight_ei (float): The synaptic weight from inhibitory to excitatory neurons.
+        weight_ie (float): The synaptic weight from excitatory to inhibitory neurons.
+        weight_ii (float): The synaptic weight from inhibitory to inhibitory neurons.
+        weight_in (float): The synaptic weight from input to excitatory neurons.
+    Methods:
+        __call__(audio, sampling_rate=None): Converts the input audio signal into spike trains.
+    """
 
     def __init__(
         self,
@@ -934,14 +960,28 @@ class filterbank_sync_phase:
                 + self.weight_ie * jnp.sum(spikes_exc)
             )
 
-            lif_mem_exc = lif_mem_exc + (
-                (-lif_mem_exc / self.lif_exc_tau_membrane + I_exc + self.lif_exc_idc)
-                / self.sampling_rate
-            )
-            lif_mem_inh = lif_mem_inh + (
-                (-lif_mem_inh / self.lif_inh_tau_membrane + I_inh + self.lif_inh_idc)
-                / self.sampling_rate
-            )
+            lif_mem_exc = (
+                lif_mem_exc
+                + (
+                    (
+                        -lif_mem_exc / self.lif_exc_tau_membrane
+                        + I_exc
+                        + self.lif_exc_idc
+                    )
+                    / self.sampling_rate
+                )
+            ) * (1 - spikes_exc)
+            lif_mem_inh = (
+                lif_mem_inh
+                + (
+                    (
+                        -lif_mem_inh / self.lif_inh_tau_membrane
+                        + I_inh
+                        + self.lif_inh_idc
+                    )
+                    / self.sampling_rate
+                )
+            ) * (1 - spikes_inh)
 
             return (
                 lif_mem_exc,
