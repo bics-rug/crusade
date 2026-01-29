@@ -2,7 +2,8 @@ from typing import Optional
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, Float, Int8
+import jax.random as jrandom
+from jaxtyping import Array, Float, Int8, PRNGKeyArray
 from scipy.signal import butter
 
 from . import utils
@@ -805,6 +806,7 @@ class filterbank_sync_phase:
 
     def __init__(
         self,
+        key: PRNGKeyArray,
         sampling_rate: float = 4410000,
         num_neurons: int = 32,
         freq_min: float = 200,
@@ -833,20 +835,26 @@ class filterbank_sync_phase:
         self.freq_max = freq_max
         self.freq_distribution = freq_distribution
         self.lif_variability = lif_variability
-        self.lif_exc_idc = lif_exc_idc
-        self.lif_exc_tau_membrane = lif_exc_tau_membrane
-        self.lif_exc_tau_synapse = lif_exc_tau_synapse
-        self.lif_exc_threshold = lif_exc_threshold
-        self.lif_exc_tau_ref = lif_exc_tau_ref
-        self.lif_inh_idc = lif_inh_idc
-        self.lif_inh_tau_membrane = lif_inh_tau_membrane
-        self.lif_inh_tau_synapse = lif_inh_tau_synapse
-        self.lif_inh_threshold = lif_inh_threshold
-        self.lif_inh_tau_ref = lif_inh_tau_ref
-        self.weight_ee = weight_ee
-        self.weight_ei = weight_ei
-        self.weight_ie = weight_ie
-        self.weight_ii = weight_ii
+
+        def add_var(x, key):
+            return x * (1 + lif_variability * jrandom.normal(key, (num_neurons,)))
+
+        keys = jrandom.split(key, 10)
+        self.lif_exc_idc = add_var(lif_exc_idc, keys[0])
+        self.lif_exc_tau_membrane = add_var(lif_exc_tau_membrane, keys[1])
+        self.lif_exc_tau_synapse = add_var(lif_exc_tau_synapse, keys[2])
+        self.lif_exc_threshold = add_var(lif_exc_threshold, keys[3])
+        self.lif_exc_tau_ref = add_var(lif_exc_tau_ref, keys[4])
+        self.lif_inh_idc = add_var(lif_inh_idc, keys[5])
+        self.lif_inh_tau_membrane = add_var(lif_inh_tau_membrane, keys[6])
+        self.lif_inh_tau_synapse = add_var(lif_inh_tau_synapse, keys[7])
+        self.lif_inh_threshold = add_var(lif_inh_threshold, keys[8])
+        self.lif_inh_tau_ref = add_var(lif_inh_tau_ref, keys[9])
+
+        self.weight_ee = weight_ee / num_neurons
+        self.weight_ei = weight_ei / num_neurons
+        self.weight_ie = weight_ie / num_neurons
+        self.weight_ii = weight_ii / num_neurons
         self.weight_in = weight_in
 
         self.step_ref_exc = int(self.lif_exc_tau_ref * self.sampling_rate)
@@ -922,66 +930,63 @@ class filterbank_sync_phase:
                 count_threshold_inh,
                 I_exc,
                 I_inh,
+                spikes_exc,
+                spikes_inh,
             ) = carry
 
-            spikes_exc = ((lif_mem_exc >= self.lif_exc_threshold).astype(int)) * (
-                count_threshold_exc.astype(int) >= self.step_ref_exc
-            ).astype(
-                int
-            )  # Generate spikes based on thresholds and refractory period (in steps)
-
-            count_threshold_exc = (count_threshold_exc + 1) * (
-                1 - spikes_exc
-            )  # Reset counter if spike occurred
-
-            spikes_inh = ((lif_mem_inh >= self.lif_inh_threshold).astype(int)) * (
-                count_threshold_inh.astype(int) >= self.step_ref_inh
-            ).astype(
-                int
-            )  # Generate spikes based on thresholds and refractory period (in steps)
-
-            count_threshold_inh = (count_threshold_inh + 1) * (
-                1 - spikes_inh
-            )  # Reset counter if spike occurred
-
-            I_exc = I_exc * (
-                1 - 1 / (self.lif_exc_tau_synapse * self.sampling_rate)
-            ) + (
-                input_val * self.weight_in
+            ## Input current
+            I_exc_decay = self.lif_exc_tau_synapse * self.sampling_rate
+            I_exc = (
+                I_exc * (1 - 1 / I_exc_decay)
+                + input_val * self.weight_in
                 + self.weight_ee * jnp.sum(spikes_exc)
                 - self.weight_ei * jnp.sum(spikes_inh)
             )
 
-            I_inh = I_inh * (
-                1 - 1 / (self.lif_inh_tau_synapse * self.sampling_rate)
-            ) + (
-                0
+            I_inh_decay = self.lif_inh_tau_synapse * self.sampling_rate
+            I_inh = (
+                I_inh * (1 - 1 / I_inh_decay)
                 - self.weight_ii * jnp.sum(spikes_inh)
                 + self.weight_ie * jnp.sum(spikes_exc)
             )
 
-            lif_mem_exc = (
-                lif_mem_exc
-                + (
-                    (
-                        -lif_mem_exc / self.lif_exc_tau_membrane
-                        + I_exc
-                        + self.lif_exc_idc
-                    )
-                    / self.sampling_rate
-                )
-            ) * (1 - spikes_exc)
-            lif_mem_inh = (
-                lif_mem_inh
-                + (
-                    (
-                        -lif_mem_inh / self.lif_inh_tau_membrane
-                        + I_inh
-                        + self.lif_inh_idc
-                    )
-                    / self.sampling_rate
-                )
-            ) * (1 - spikes_inh)
+            ## Voltage integration
+            integration = (-lif_mem_exc + I_exc + self.lif_exc_idc) / (
+                self.sampling_rate * self.lif_exc_tau_membrane
+            )
+            lif_mem_exc = lif_mem_exc + jnp.where(
+                count_threshold_exc > 0, 0.0, integration
+            )
+
+            integration = (-lif_mem_inh + I_inh + self.lif_inh_idc) / (
+                self.sampling_rate * self.lif_inh_tau_membrane
+            )
+            lif_mem_inh = lif_mem_inh + jnp.where(
+                count_threshold_inh > 0, 0.0, integration
+            )
+
+            ## Spike generation
+            spikes_exc = (lif_mem_exc >= self.lif_exc_threshold).astype(
+                int
+            )  # Generate spikes based on thresholds
+            spikes_inh = (lif_mem_inh >= self.lif_inh_threshold).astype(
+                int
+            )  # Generate spikes based on thresholds
+
+            ## Reset
+            lif_mem_exc = jnp.where(spikes_exc, 0.0, lif_mem_exc)
+            lif_mem_inh = jnp.where(spikes_inh, 0.0, lif_mem_inh)
+
+            count_threshold_exc = jnp.where(
+                spikes_exc,
+                self.lif_exc_tau_ref,
+                jax.nn.relu(count_threshold_exc - 1 / self.sampling_rate),
+            )
+            count_threshold_inh = jnp.where(
+                spikes_inh,
+                self.lif_inh_tau_ref,
+                jax.nn.relu(count_threshold_inh - 1 / self.sampling_rate),
+            )
 
             return (
                 lif_mem_exc,
@@ -990,9 +995,13 @@ class filterbank_sync_phase:
                 count_threshold_inh,
                 I_exc,
                 I_inh,
-            ), (spikes_exc, spikes_inh)
+                spikes_exc,
+                spikes_inh,
+            ), jnp.concatenate([spikes_exc, spikes_inh])
 
         initial_carry = (
+            jnp.zeros((self.num_neurons,)),
+            jnp.zeros((self.num_neurons,)),
             jnp.zeros((self.num_neurons,)),
             jnp.zeros((self.num_neurons,)),
             jnp.zeros((self.num_neurons,)),
@@ -1007,4 +1016,4 @@ class filterbank_sync_phase:
         event_time = time_ax[event_v]
         event_address = address_v
 
-        return event_time, event_address
+        return event_time, event_address, audio_bands
