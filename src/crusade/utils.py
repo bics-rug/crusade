@@ -7,7 +7,12 @@ from scipy.signal import resample, sosfilt, sosfiltfilt, windows
 
 def download_dataset(name="rfcx/frugalai", streaming=False, token=None, split="train"):
     """Downloads the RFCx FrugalAI dataset using the Hugging Face datasets library.
-    to login: $ huggingface-cli login
+    to login:
+
+    ```bash
+    $ huggingface-cli login
+    ```
+
     Returns:
         DatasetDict: The downloaded dataset containing training, validation, and test splits.
     """
@@ -21,10 +26,12 @@ def download_dataset(name="rfcx/frugalai", streaming=False, token=None, split="t
 
 def low_pass_filter(modulated_signal, window_size=301, gain=4.65415):
     """Applies a low-pass filter to the modulated signal using a Hann window.
+
     Args:
         modulated_signal (float): Input modulated signal (e.g., spike train).
         window_size (int): Size of the Hann window for filtering.
         gain (float): Gain factor to scale the filtered signal.
+
     Returns:
         float: The filtered signal.
     """
@@ -43,11 +50,13 @@ def audio_resampling_and_scaling(
     scaling_factor=1.0,
 ) -> Float[Array, "#time"]:
     """Resamples and scales the input audio signal.
+
     Args:
         audio (Array): Input audio signal.
         original_frequency (float): Original sampling frequency of the audio signal.
         target_frequency (float): Target sampling frequency for resampling.
         scaling_factor (float or str): Scaling factor or method ('normalize') for scaling the audio signal.
+
     Returns:
         Array: Resampled and scaled audio signal.
     """
@@ -163,9 +172,11 @@ def aer_to_array(event_time, event_address, event_magnitude, duration, sampling_
 
 def mu_encoding(signal, mu=255):
     """Applies mu-law encoding to the input signal (it should be pronounced mi).
+
     Args:
         signal (float): Input audio signal.
         mu (int): Mu parameter for mu-law encoding.
+
     Returns:
         float: Mu-law encoded signal.
     """

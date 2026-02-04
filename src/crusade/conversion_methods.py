@@ -13,10 +13,12 @@ class sigma_delta_neuron_in_the_loop:
     Implements an adaptive sigma-delta neuron model that converts continuous audio signals into spike trains.
     The difference from the standard sigma-delta model is that the feed back spikes and not continuous values.
     IT has an integrator in series with a integrate and fire neuron.
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         feedback_gain (float): The feedback gain for the neuron model.
         threshold (float): The threshold for spike generation.
+
     Methods:
         __call__(audio, feedback_gain=None, threshold=None): Converts the input audio signal into spike trains.
     """
@@ -78,10 +80,12 @@ class sigma_delta_neuron_in_the_loop:
 class sigma_delta_spiking:
     """Sigma-Delta Model with spiking comparator and feedback
     Implements a sigma-delta neuron model that converts continuous audio signals into spike trains.
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         feedback_gain (float): The feedback gain for the neuron model.
         threshold (float): The threshold for spike generation.
+
     Methods:
         __call__(audio, feedback_gain=None, threshold=None): Converts the input audio signal into spike trains.
     """
@@ -143,10 +147,12 @@ class sigma_delta_spiking:
 
 class sigma_delta_edge_spikes:
     """Sigma-Delta ADC which transmits only spikes generate during transitions.
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         feedback_gain (float): The feedback gain for the sigma delta, always 1.
         threshold (float): The threshold for spike generation.
+
     Methods:
         __call__(audio, feedback_gain=None, threshold=None): Converts the input audio signal into spike trains.
     """
@@ -200,9 +206,11 @@ class sigma_delta_edge_spikes:
 class amplitude_to_frequency:
     """Amplitude to Frequency Conversion
     Converts the amplitude of the input audio signal into a frequency-modulated spike train.
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         max_freq (float): The maximum frequency of the output spike train.
+
     Methods:
         __call__(audio, sampling_rate=None, max_freq=None): Converts the input audio signal into a frequency-modulated spike train.
     """
@@ -239,7 +247,7 @@ class amplitude_to_frequency:
 class resonate_and_fire_bank:
     """Resonate-and-Fire Neuron Bank
     Implements a bank of resonate-and-fire neurons that convert continuous audio signals into spike trains.
-    Adapted from Giuseppe Leo code
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         num_neurons (int): The number of resonate-and-fire neurons in the bank.
@@ -249,9 +257,12 @@ class resonate_and_fire_bank:
         input_gain (float): The gain applied to the input audio signal.
         freq_distribution (str): The distribution of frequencies for the resonate-and-fire neurons ('linear', 'log', 'mel').
         threshold (float): The threshold for spike generation.
+
     Methods:
         __call__(audio, sampling_rate=None, damping_factor=None, input_gain=None, threshold=None): Converts the input audio signal into spike trains.
     """
+
+    # Adapted from Giuseppe Leo code
 
     def __init__(
         self,
@@ -472,14 +483,17 @@ class resonate_and_fire_bank:
 class standard_ADM:
     """Standard Adaptive Delta Modulator (ADM)
     Implements a standard adaptive delta modulator that converts continuous audio signals into spike trains.
-    Based on Olympia Gallou code
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         threshold (float): The threshold for spike generation.
         t_ref (int): The refractory period in number of samples. (Not implemented)
+
     Methods:
         __call__(audio, sampling_rate=None, threshold=None, t_ref=None): Converts the input audio signal into spike trains.
     """
+
+    # Based on Olympia Gallou code.
 
     # TODO: Implement t_ref functionality
     def __init__(
@@ -571,7 +585,7 @@ class standard_ADM:
 class filterbank_ADM:
     """Filterbank Adaptive Delta Modulator (ADM)
     Implements a filterbank-based adaptive delta modulator that converts continuous audio signals into spike trains.
-    Based on Olympia Gallou code.
+
     Attributes:
         sampling_rate: The sampling rate of the input audio signal.
         num_neurons (int): The number of neurons in the filterbank.
@@ -580,9 +594,12 @@ class filterbank_ADM:
         freq_distribution (str): The distribution of frequencies for the filterbank neurons ('linear', 'log', 'mel').
         delta (float): The delta value for threshold adaptation.
         t_ref (float): The refractory period in seconds.
+
     Methods:
         __call__(audio, sampling_rate=None, threshold=None, t_ref=None): Converts the input audio signal into spike trains.
     """
+
+    # Based on Olympia Gallou code.
 
     def __init__(
         self,
@@ -775,7 +792,7 @@ class filterbank_ADM:
 
 
 class filterbank_sync_phase:
-    """Based on the code of Patrick Boesch"""
+    # Based on the code of Patrick Boesch
 
     def __init__(
         self,
