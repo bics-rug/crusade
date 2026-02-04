@@ -1,5 +1,5 @@
 # CRUSADE
-[![DOI](https://zenodo.org/badge/1139115836.svg)](https://doi.org/10.5281/zenodo.18479558)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18480360.svg)](https://doi.org/10.5281/zenodo.18480360)
 
 Conversion of Raw-audio Using Spikes Analog Digital Encoders
 
@@ -52,7 +52,7 @@ plt.show()
 ```
 
 ## Tests
--On pc
+- On pc
 
 To check if the models are working:
 ```bash
@@ -75,6 +75,6 @@ uv run pre-commit install
 ```
 once installed it runs automatically for every commit
 
--On git
+- On git
 
 It does automatically runs all the tests
