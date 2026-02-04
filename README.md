@@ -1,4 +1,6 @@
 # CRUSADE
+[![DOI](https://zenodo.org/badge/1139115836.svg)](https://doi.org/10.5281/zenodo.18479558)
+
 Conversion of Raw-audio Using Spikes Analog Digital Encoders
 
 This repository contains implementations of different analogue-to-spike converters for raw audio signal.
